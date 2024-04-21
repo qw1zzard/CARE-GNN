@@ -7,7 +7,7 @@ def normalize(mx):
     """Row-normalize sparse matrix"""
     rowsum = np.array(mx.sum(1)) + 0.01
     r_inv = np.power(rowsum, -1).flatten()
-    r_inv[np.isinf(r_inv)] = 0.
+    r_inv[np.isinf(r_inv)] = 0.0
     r_mat_inv = sp.diags(r_inv)
     mx = r_mat_inv.dot(mx)
     return mx
@@ -19,11 +19,19 @@ mode = 'pos'  # if set to pos, it only compute two metrics for positive nodes
 data = loadmat(data_name)
 
 if data_name == 'YelpChi.mat':
-    net_list = [data['net_rur'].nonzero(), data['net_rtr'].nonzero(),
-                 data['net_rsr'].nonzero(), data['homo'].nonzero()]
+    net_list = [
+        data['net_rur'].nonzero(),
+        data['net_rtr'].nonzero(),
+        data['net_rsr'].nonzero(),
+        data['homo'].nonzero(),
+    ]
 else:  # amazon dataset
-    net_list = [data['net_upu'].nonzero(), data['net_usu'].nonzero(),
-                data['net_uvu'].nonzero(), data['homo'].nonzero()]
+    net_list = [
+        data['net_upu'].nonzero(),
+        data['net_usu'].nonzero(),
+        data['net_uvu'].nonzero(),
+        data['homo'].nonzero(),
+    ]
 
 feature = normalize(data['features']).toarray()
 label = data['label'][0]
@@ -46,7 +54,9 @@ for net, pos_idx in zip(net_list, pos_idx_list):
     if mode == 'pos':  # compute two metrics for positive nodes
         for idx in pos_idx:
             u, v = net[0][idx], net[1][idx]
-            feature_simi += np.exp(-1 * np.square(np.linalg.norm(feature[u] - feature[v])))
+            feature_simi += np.exp(
+                -1 * np.square(np.linalg.norm(feature[u] - feature[v]))
+            )
             label_simi += label[u] == label[v]
 
         feature_simi = feature_simi / pos_idx.size
@@ -54,7 +64,9 @@ for net, pos_idx in zip(net_list, pos_idx_list):
 
     else:  # compute two metrics for all nodes
         for u, v in zip(net[0].tolist(), net[1].tolist()):
-            feature_simi += np.exp(-1 * np.square(np.linalg.norm(feature[u] - feature[v])))
+            feature_simi += np.exp(
+                -1 * np.square(np.linalg.norm(feature[u] - feature[v]))
+            )
             label_simi += label[u] == label[v]
 
         feature_simi = feature_simi / net[0].size

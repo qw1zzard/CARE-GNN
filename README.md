@@ -71,10 +71,19 @@ We have integrated more than **eight** GNN-based fraud detectors as a TensorFlow
 
 You can download the project and install the required packages using the following commands:
 
+### Python environment setup with Conda
+
 ```bash
-git clone https://github.com/YingtongDou/CARE-GNN.git
-cd CARE-GNN
-pip3 install -r requirements.txt
+conda create -n care-gnn python=3.8
+conda activate care-gnn
+
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+
+conda install -c conda-forge ruff
+
+pip install numpy pandas scikit-learn
+
+conda clean --all
 ```
 
 To run the code, you need to have at least **Python 3.6** or later versions. 
