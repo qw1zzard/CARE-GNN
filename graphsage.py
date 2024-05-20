@@ -1,10 +1,10 @@
-import torch
-import torch.nn as nn
-from torch.nn import init
-import torch.nn.functional as F
-from torch.autograd import Variable
 import random
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.autograd import Variable
+from torch.nn import init
 
 """
 	GraphSAGE implementations
@@ -68,7 +68,7 @@ class MeanAggregator(nn.Module):
         """
         # Local pointers to functions (speed hack)
         _set = set
-        if not num_sample is None:
+        if num_sample is not None:
             _sample = random.sample
             samp_neighs = [
                 _set(
@@ -137,7 +137,7 @@ class Encoder(nn.Module):
         self.adj_lists = adj_lists
         self.aggregator = aggregator
         self.num_sample = num_sample
-        if base_model != None:
+        if base_model is not None:
             self.base_model = base_model
 
         self.gcn = gcn

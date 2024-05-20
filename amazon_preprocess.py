@@ -5,31 +5,16 @@ import scipy.sparse as sp
 import random as rd
 import math
 from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-from sklearn.linear_model import LogisticRegression
-import sklearn.neural_network as nn
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    roc_auc_score,
-    average_precision_score,
-    precision_recall_fscore_support,
-    accuracy_score,
-    f1_score,
-    recall_score,
-)
-import xgboost as xgb
-
-from run_ours import pos_neg_split, undersample
 
 rd.seed(1)
 
 
 def parse(path):
     g = gzip.open(path, 'rb')
-    for l in g:
-        yield eval(l)
+    for file in g:
+        yield eval(file)
 
 
 def getdict(path):
@@ -200,55 +185,11 @@ def build_graph(new_reviews):
                 user_adj[i1, i2] = 1
                 user_adj[i2, i1] = 1
 
-    # # user-star&time-user
-    # rating_time = {user: [(review['overall'], review['unixReviewTime']) for review in reviews] for user, reviews in new_reviews.items()}
-    #
-    # for i1, u1 in enumerate(new_reviews):
-    # 	print(i1)
-    # 	for i2, u2 in enumerate(new_reviews):
-    # 		if u1 != u2 and star_judge(rating_time[u1], rating_time[u2]) and time_judge(rating_time[u1], rating_time[u2]):
-    # 			user_adj[i1, i2] = 1
-    # 			user_adj[i2, i1] = 1
-
-    # # user-textsim_user
-    # user_text = {user: ' '.join([review['reviewText'] for review in reviews]) for user, reviews in new_reviews.items()}
-    #
-    # all_text = list(user_text.values())
-    # vect = TfidfVectorizer(min_df=1, stop_words="english")
-    # tfidf = vect.fit_transform(all_text)
-    # simi = tfidf * tfidf.T
-    # simi_arr = simi.toarray()
-    # np.fill_diagonal(simi_arr, 0)
-    # flat_arr = simi_arr.flatten()
-    # flat_arr.sort()
-    # threshold = flat_arr[int(flat_arr.size*0.95)]
-    # print(threshold)
-    #
-    # for i1, u1 in enumerate(new_reviews):
-    # 	print(i1)
-    # 	for i2, u2 in enumerate(new_reviews):
-    # 		if u1 != u2 and simi_arr[i1, i2] >= threshold:
-    # 			user_adj[i1, i2] = 1
-    # 			user_adj[i2, i1] = 1
-
-    # user-product-star-user
-    # products = {u: [review['asin'] for review in reviews] for u, reviews in new_reviews.items()}
-    # rating_time = {user: [(review['overall'], review['unixReviewTime']) for review in reviews] for user, reviews in
-    # 			   new_reviews.items()}
-    # for i1, u1 in enumerate(new_reviews):
-    # 	print(i1)
-    # 	for i2, u2 in enumerate(new_reviews):
-    # 		if u1 != u2 and len(list(set(products[u1]) & set(products[u2]))) >= 1 and star_judge(rating_time[u1], rating_time[u2]):
-    # 			user_adj[i1, i2] = 1
-    # 			user_adj[i2, i1] = 1
-
     return user_adj
 
 
 def build_features(new_reviews):
     features = sp.lil_matrix((len(new_reviews), 36))
-
-    user_ids = list(new_reviews.keys())
 
     # 1) [0] Number of rated products
     no_prod = [len(reviews) for reviews in new_reviews.values()]

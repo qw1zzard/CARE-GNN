@@ -1,14 +1,15 @@
-import time
+import argparse
 import os
 import random
-import argparse
+import time
+
 from sklearn.model_selection import train_test_split
 
-from utils import *
-from model import *
-from layers import *
-from graphsage import *
 import wandb
+from graphsage import *  # noqa: F403
+from layers import *  # noqa: F403
+from model import *  # noqa: F403
+from utils import *  # noqa: F403
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -90,11 +91,12 @@ wandb.init(
     },
 )
 
+
 # load graph, feature, and label
-[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
+[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)  # noqa: F405
 
 # train_test split
-np.random.seed(args.seed)
+np.random.seed(args.seed)  # noqa: F405
 random.seed(args.seed)
 if args.data == 'yelp':
     index = list(range(len(labels)))
@@ -114,12 +116,12 @@ elif args.data == 'amazon':  # amazon
     )
 
 # split pos neg sets for under-sampling
-train_pos, train_neg = pos_neg_split(idx_train, y_train)
+train_pos, train_neg = pos_neg_split(idx_train, y_train)  # noqa: F405
 
 # initialize model input
-features = nn.Embedding(feat_data.shape[0], feat_data.shape[1])
-feat_data = normalize(feat_data)
-features.weight = nn.Parameter(torch.FloatTensor(feat_data), requires_grad=False)
+features = nn.Embedding(feat_data.shape[0], feat_data.shape[1])  # noqa: F405
+feat_data = normalize(feat_data)  # noqa: F405
+features.weight = nn.Parameter(torch.FloatTensor(feat_data), requires_grad=False)  # noqa: F405
 if args.cuda:
     features.cuda()
 
@@ -133,10 +135,10 @@ print(f'Model: {args.model}, Inter-AGG: {args.inter}, emb_size: {args.emb_size}.
 
 # build one-layer models
 if args.model == 'CARE':
-    intra1 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-    intra2 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-    intra3 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-    inter1 = InterAgg(
+    intra1 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)  # noqa: F405
+    intra2 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)  # noqa: F405
+    intra3 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)  # noqa: F405
+    inter1 = InterAgg(  # noqa: F405
         features,
         feat_data.shape[1],
         args.emb_size,
@@ -147,8 +149,8 @@ if args.model == 'CARE':
         cuda=args.cuda,
     )
 elif args.model == 'SAGE':
-    agg1 = MeanAggregator(features, cuda=args.cuda)
-    enc1 = Encoder(
+    agg1 = MeanAggregator(features, cuda=args.cuda)  # noqa: F405
+    enc1 = Encoder(  # noqa: F405
         features,
         feat_data.shape[1],
         args.emb_size,
@@ -159,16 +161,16 @@ elif args.model == 'SAGE':
     )
 
 if args.model == 'CARE':
-    gnn_model = OneLayerCARE(2, inter1, args.lambda_1)
+    gnn_model = OneLayerCARE(2, inter1, args.lambda_1)  # noqa: F405
 elif args.model == 'SAGE':
     # the vanilla GraphSAGE model as baseline
     enc1.num_samples = 5
-    gnn_model = GraphSage(2, enc1)
+    gnn_model = GraphSage(2, enc1)  # noqa: F405
 
 if args.cuda:
     gnn_model.cuda()
 
-optimizer = torch.optim.Adam(
+optimizer = torch.optim.Adam(  # noqa: F405
     filter(lambda p: p.requires_grad, gnn_model.parameters()),
     lr=args.lr,
     weight_decay=args.lambda_2,
@@ -179,8 +181,8 @@ performance_log = []
 # train the model
 for epoch in range(args.num_epochs):
     # randomly under-sampling negative nodes for each epoch
-    sampled_idx_train = undersample(train_pos, train_neg, scale=1)
-    rd.shuffle(sampled_idx_train)
+    sampled_idx_train = undersample(train_pos, train_neg, scale=1)  # noqa: F405
+    rd.shuffle(sampled_idx_train)  # noqa: F405
 
     # send number of batches to model to let the RLModule know the training progress
     num_batches = int(len(sampled_idx_train) / args.batch_size) + 1
@@ -196,14 +198,15 @@ for epoch in range(args.num_epochs):
         i_start = batch * args.batch_size
         i_end = min((batch + 1) * args.batch_size, len(sampled_idx_train))
         batch_nodes = sampled_idx_train[i_start:i_end]
-        batch_label = labels[np.array(batch_nodes)]
+        batch_label = labels[np.array(batch_nodes)]  # noqa: F405
         optimizer.zero_grad()
         if args.cuda:
             loss = gnn_model.loss(
-                batch_nodes, Variable(torch.cuda.LongTensor(batch_label))
+                batch_nodes,
+                Variable(torch.tensor(batch_label, dtype=torch.long, device='cuda')),  # noqa: F405
             )
         else:
-            loss = gnn_model.loss(batch_nodes, Variable(torch.LongTensor(batch_label)))
+            loss = gnn_model.loss(batch_nodes, Variable(torch.LongTensor(batch_label)))  # noqa: F405
         loss.backward()
         optimizer.step()
         end_time = time.time()
@@ -217,9 +220,9 @@ for epoch in range(args.num_epochs):
     # testing the model for every $test_epoch$ epoch
     if epoch % args.test_epochs == 0:
         if args.model == 'SAGE':
-            test_sage(idx_test, y_test, gnn_model, args.batch_size)
+            test_sage(idx_test, y_test, gnn_model, args.batch_size)  # noqa: F405
         else:
-            gnn_auc, label_auc, gnn_recall, label_recall = test_care(
+            gnn_auc, f1, label_auc, gnn_recall, label_recall = test_care(  # noqa: F405
                 idx_test, y_test, gnn_model, args.batch_size
             )
             performance_log.append([gnn_auc, label_auc, gnn_recall, label_recall])

@@ -1,5 +1,6 @@
-from utils import sparse_to_adjlist
 from scipy.io import loadmat
+
+from utils import sparse_to_adjlist
 
 """
 	Read data and save the adjacency matrices to adjacency lists

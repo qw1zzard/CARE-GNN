@@ -1,12 +1,11 @@
+import math
+from operator import itemgetter
+
 import torch
 import torch.nn as nn
-from torch.nn import init
 import torch.nn.functional as F
 from torch.autograd import Variable
-
-
-from operator import itemgetter
-import math
+from torch.nn import init
 
 """
 	CARE-GNN Layers
@@ -110,7 +109,9 @@ class InterAgg(nn.Module):
 
         # calculate label-aware scores
         if self.cuda:
-            batch_features = self.features(torch.cuda.LongTensor(list(unique_nodes)))
+            batch_features = self.features(
+                torch.tensor(list(unique_nodes), dtype=torch.long, device='cuda')
+            )
         else:
             batch_features = self.features(torch.LongTensor(list(unique_nodes)))
         batch_scores = self.label_clf(batch_features)

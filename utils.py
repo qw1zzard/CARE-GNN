@@ -1,18 +1,18 @@
+import copy as cp
 import pickle
 import random as rd
+from collections import defaultdict
+
 import numpy as np
 import scipy.sparse as sp
 from scipy.io import loadmat
-import copy as cp
 from sklearn.metrics import (
-    f1_score,
     accuracy_score,
+    average_precision_score,
+    f1_score,
     recall_score,
     roc_auc_score,
-    average_precision_score,
 )
-from collections import defaultdict
-
 
 """
 	Utility functions to handle data and evaluate model.

@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from torch.nn import init
 
-
 """
 	CARE-GNN Models
 	Paper: Enhancing Graph Neural Network-based Fraud Detectors against Camouflaged Fraudsters
