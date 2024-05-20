@@ -81,7 +81,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvi
 
 conda install -c conda-forge ruff
 
-pip install numpy pandas scikit-learn
+pip install numpy pandas scikit-learn wandb isort
 
 conda clean --all
 ```

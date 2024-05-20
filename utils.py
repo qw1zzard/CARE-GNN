@@ -236,4 +236,5 @@ def test_care(test_cases, labels, model, batch_size):
     print(f'Label1 auc: {auc_label1:.4f}')
     print(f'Label1 ap: {ap_label1:.4f}')
 
-    return auc_gnn, auc_label1, recall_gnn, recall_label1
+    f1_log_score = float(f1_gnn / test_batch_num)
+    return auc_gnn, f1_log_score, auc_label1, recall_gnn, recall_label1

@@ -6,3 +6,4 @@
 backup.py
 *.pickle
 __pycache__
+wandb/

@@ -8,6 +8,7 @@ from utils import *
 from model import *
 from layers import *
 from graphsage import *
+import wandb
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -63,8 +64,31 @@ parser.add_argument('--seed', type=int, default=72, help='Random seed.')
 
 
 args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
+args.cuda = not args.no_cuda and torch.cuda.is_available()  # noqa: F405
 print(f'run on {args.data}')
+
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project='care-gnn',
+    # track hyperparameters and run metadata
+    config={
+        'data': args.data,
+        'model': args.model,
+        'inter': args.inter,
+        'batch-size': args.batch_size,
+        'lr': args.lr,
+        'lambda_1': args.lambda_1,
+        'lambda_2': args.lambda_2,
+        'emb-size': args.emb_size,
+        'num-epochs': args.num_epochs,
+        'test-epochs': args.test_epochs,
+        'under-sample': args.under_sample,
+        'step-size': args.step_size,
+        'no-cuda': args.no_cuda,
+        'seed': args.seed,
+    },
+)
 
 # load graph, feature, and label
 [homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
@@ -186,7 +210,9 @@ for epoch in range(args.num_epochs):
         epoch_time += end_time - start_time
         loss += loss.item()
 
-    print(f'Epoch: {epoch}, loss: {loss.item() / num_batches}, time: {epoch_time}s')
+    loss_score = float(loss.item() / num_batches)
+    print(f'Epoch: {epoch}, loss: {loss_score}, time: {epoch_time}s')
+    wandb.log({'epoch': epoch, 'loss': loss_score, 'time': epoch_time})
 
     # testing the model for every $test_epoch$ epoch
     if epoch % args.test_epochs == 0:
@@ -197,3 +223,4 @@ for epoch in range(args.num_epochs):
                 idx_test, y_test, gnn_model, args.batch_size
             )
             performance_log.append([gnn_auc, label_auc, gnn_recall, label_recall])
+            wandb.log({'auc': gnn_auc, 'f1': f1})
